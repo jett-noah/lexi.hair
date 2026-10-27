@@ -13,6 +13,7 @@ import {
   downloadIcsFile,
 } from './constants';
 import AdminPortal from './AdminPortal';
+import InstagramFeed from './InstagramFeed';
 import {
   Scissors,
   Calendar as CalendarIcon,
@@ -677,43 +678,8 @@ export default function App() {
         )}
       </main>
 
-      {/* Client Results / Portfolio Filler Section */}
-      <section id="gallery" className="bg-cream-dark/50 border-t border-espresso/10 py-16 px-4">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center max-w-xl mx-auto mb-10">
-            <span className="text-xs uppercase tracking-widest text-terracotta font-semibold">
-              Portfolio
-            </span>
-            <h2 className="font-serif text-4xl font-semibold mt-1">Client Results & Transformations</h2>
-            <p className="text-sm text-espresso-light mt-2">
-              A glimpse at custom color, styling, and healthy hair transformations by Lexi.
-            </p>
-          </div>
-
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {PLACEHOLDER_GALLERY.map((item) => (
-              <div
-                key={item.id}
-                className="group bg-cream-card rounded-2xl overflow-hidden border border-espresso/10 shadow-sm"
-              >
-                <div className="aspect-[4/5] overflow-hidden bg-cream-dark">
-                  <img
-                    src={item.image}
-                    alt={item.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition duration-500"
-                  />
-                </div>
-                <div className="p-4">
-                  <span className="text-[11px] uppercase tracking-wider text-terracotta font-semibold">
-                    {item.category}
-                  </span>
-                  <h3 className="font-serif text-lg font-semibold">{item.title}</h3>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
+      {/* Client Results / Live Instagram Section */}
+      <InstagramFeed />
 
       {/* Footer */}
       <footer className="bg-espresso text-cream py-12 px-4 mt-auto">

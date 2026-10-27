@@ -1,6 +1,8 @@
 export const SALON_INFO = {
   name: 'Hair By Lexi',
   email: 'lexi@lexi.hair',
+  instagramHandle: '@hair.by.lexih_',
+  instagramUrl: 'https://www.instagram.com/hair.by.lexih_/',
   address: '1503 E College Ave Suite L, Normal, IL 61761',
   googleMapsUrl: 'https://www.google.com/maps/search/?api=1&query=1503+E+College+Ave+Suite+L+Normal+IL+61761',
   appleMapsUrl: 'https://maps.apple.com/?address=1503,E+College+Ave,Suite+L,Normal,IL,61761',
