@@ -8,6 +8,7 @@ const APPLE_MAPS_URL =
 const DISCLAIMER = 'Appointments are subject to change at the discretion of Hair By Lexi';
 
 function formatTime12Hr(time24) {
+  if (!time24) return '';
   const [h, m] = time24.split(':').map(Number);
   const period = h >= 12 ? 'PM' : 'AM';
   const hour12 = h % 12 === 0 ? 12 : h % 12;
@@ -15,8 +16,8 @@ function formatTime12Hr(time24) {
 }
 
 function formatCalendarTimestamp(dateStr, time24) {
-  const cleanDate = dateStr.replace(/-/g, '');
-  const cleanTime = time24.replace(':', '') + '00';
+  const cleanDate = (dateStr || '').replace(/-/g, '');
+  const cleanTime = (time24 || '').replace(':', '') + '00';
   return `${cleanDate}T${cleanTime}`;
 }
 
@@ -26,7 +27,9 @@ export default async function handler(req, res) {
   }
 
   try {
-    const booking = req.body;
+    // Safely parse body whether Vercel passes an object or a raw string
+    const booking = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
+
     const {
       id,
       appointment_date,
@@ -40,9 +43,19 @@ export default async function handler(req, res) {
       notes,
     } = booking;
 
+    const gmailUser = (process.env.GMAIL_USER || 'hairbylexih@gmail.com').trim();
+    // Automatically strip any accidental spaces from the 16-char Google App Password
+    const gmailPass = (process.env.GMAIL_APP_PASSWORD || '').replace(/\s+/g, '');
+
+    if (!gmailPass) {
+      throw new Error('Missing GMAIL_APP_PASSWORD in Vercel Environment Variables.');
+    }
+
     const formattedStart = formatTime12Hr(start_time);
     const formattedEnd = formatTime12Hr(end_time);
-    const serviceNames = services.map((s) => `${s.name} ($${Number(s.price).toFixed(2)})`).join(', ');
+    const serviceNames = services
+      .map((s) => `${s.name} ($${Number(s.price).toFixed(2)})`)
+      .join(', ');
 
     // 1. Build Google Calendar Link
     const startCal = formatCalendarTimestamp(appointment_date, start_time);
@@ -78,12 +91,14 @@ export default async function handler(req, res) {
       'END:VCALENDAR',
     ].join('\r\n');
 
-    // 3. Configure Gmail Transporter
+    // 3. Configure Gmail SMTP Transporter explicitly
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true,
       auth: {
-        user: process.env.GMAIL_USER || 'hairbylexih@gmail.com',
-        pass: process.env.GMAIL_APP_PASSWORD,
+        user: gmailUser,
+        pass: gmailPass,
       },
     });
 
@@ -117,7 +132,7 @@ export default async function handler(req, res) {
             + Add to Google Calendar
           </a>
           <p style="font-size: 12px; color: #5C4D46; margin-top: 10px;">
-            📱 <strong>Using Apple Calendar?</strong> Simply tap the attached <strong>HairByLexi-${appointment_date}.ics</strong> file at the bottom of this email to add it straight to your iPhone or Mac calendar!
+            📱 <strong>Using Apple Calendar?</strong> Tap the attached <strong>HairByLexi-${appointment_date}.ics</strong> file at the bottom of this email to add it straight to your iPhone or Mac calendar!
           </p>
         </div>
 
@@ -133,7 +148,7 @@ export default async function handler(req, res) {
     `;
 
     await transporter.sendMail({
-      from: `"Hair By Lexi" <${process.env.GMAIL_USER || 'hairbylexih@gmail.com'}>`,
+      from: `"Hair By Lexi" <${gmailUser}>`,
       replyTo: 'lexi@lexi.hair',
       to: client_email,
       subject: `Appointment Confirmed: Hair By Lexi (${appointment_date} at ${formattedStart})`,
@@ -142,12 +157,12 @@ export default async function handler(req, res) {
         {
           filename: `HairByLexi-${appointment_date}.ics`,
           content: icsContent,
-          contentType: 'text/calendar; charset=utf-8; method=PUBLISH',
+          contentType: 'text/calendar; charset=utf-8',
         },
       ],
     });
 
-    // 5. Send Notification Email to Lexi (lexi@lexi.hair)
+    // 5. Send Notification Email to Lexi (both lexi@lexi.hair and direct Gmail inbox)
     const lexiHtml = `
       <div style="font-family: sans-serif; background-color: #FAF6F0; color: #2C221E; padding: 28px; border-radius: 16px; max-width: 600px; margin: 0 auto; border: 1px solid #E5DEC9;">
         <h2 style="font-family: Georgia, serif; margin-top: 0;">✨ New Booking Received!</h2>
@@ -170,16 +185,16 @@ export default async function handler(req, res) {
     `;
 
     await transporter.sendMail({
-      from: `"Hair By Lexi Booking Site" <${process.env.GMAIL_USER || 'hairbylexih@gmail.com'}>`,
+      from: `"Hair By Lexi Booking Site" <${gmailUser}>`,
       replyTo: client_email,
-      to: 'lexi@lexi.hair',
+      to: ['lexi@lexi.hair', gmailUser],
       subject: `New Appointment: ${client_name} on ${appointment_date} at ${formattedStart}`,
       html: lexiHtml,
       attachments: [
         {
           filename: `HairByLexi-${appointment_date}.ics`,
           content: icsContent,
-          contentType: 'text/calendar; charset=utf-8; method=PUBLISH',
+          contentType: 'text/calendar; charset=utf-8',
         },
       ],
     });

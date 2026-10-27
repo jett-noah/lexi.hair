@@ -173,14 +173,23 @@ export default function App() {
 
       if (insertError) throw new Error(insertError.message);
 
-      // 3. Trigger our Serverless Email API (Phase 3 will activate this endpoint)
+      // 3. Trigger our Serverless Email API and log the result in Console
       fetch('/api/send-booking-email', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(insertedData),
-      }).catch(() => {
-        // Silently ignore in local dev if serverless route isn't running yet
-      });
+      })
+        .then(async (res) => {
+          const result = await res.json();
+          if (!res.ok) {
+            console.error('❌ Email API Error:', result);
+          } else {
+            console.log('✅ Confirmation emails sent successfully!');
+          }
+        })
+        .catch((err) => {
+          console.error('❌ Could not reach /api/send-booking-email:', err);
+        });
 
       setConfirmedBooking(insertedData);
       window.scrollTo({ top: 0, behavior: 'smooth' });
