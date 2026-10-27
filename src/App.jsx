@@ -503,15 +503,15 @@ export default function App() {
             {/* STEP 2: Select Services */}
             <div
               id="services"
-              className="bg-cream-card border border-espresso/15 rounded-3xl p-6 sm:p-10 shadow-sm"
+              className="bg-cream-card border border-espresso/15 rounded-3xl p-4 sm:p-10 shadow-sm overflow-hidden"
             >
-              <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+              <div className="flex flex-wrap items-center justify-between gap-4 mb-6 sm:mb-8">
                 <div className="flex items-center gap-3">
-                  <span className="w-8 h-8 rounded-full bg-espresso text-cream flex items-center justify-center text-sm font-semibold">
+                  <span className="w-8 h-8 rounded-full bg-espresso text-cream flex items-center justify-center text-sm font-semibold shrink-0">
                     2
                   </span>
                   <div>
-                    <h2 className="font-serif text-3xl font-semibold">
+                    <h2 className="font-serif text-2xl sm:text-3xl font-semibold">
                       Choose Your Services
                     </h2>
                     <p className="text-xs sm:text-sm text-espresso-light">
@@ -528,14 +528,14 @@ export default function App() {
                 )}
               </div>
 
-              <div className="grid md:grid-cols-2 gap-8">
+              <div className="grid md:grid-cols-2 gap-5 sm:gap-8">
                 {SERVICE_CATEGORIES.map((group) => (
                   <div
                     key={group.category}
-                    className="bg-cream rounded-2xl p-6 border border-espresso/10 flex flex-col justify-between"
+                    className="min-w-0 bg-cream rounded-2xl p-4 sm:p-6 border border-espresso/10 flex flex-col justify-between"
                   >
                     <div>
-                      <h3 className="font-serif text-2xl font-semibold tracking-wide uppercase text-center border-b border-espresso/15 pb-3 mb-4">
+                      <h3 className="font-serif text-xl sm:text-2xl font-semibold tracking-wide uppercase text-center border-b border-espresso/15 pb-3 mb-4">
                         {group.category}
                       </h3>
                       <div className="space-y-2.5">
@@ -546,13 +546,13 @@ export default function App() {
                               type="button"
                               key={item.id}
                               onClick={() => toggleService(item.id)}
-                              className={`w-full text-left flex items-center justify-between p-3.5 rounded-xl border cursor-pointer select-none transition active:scale-[0.99] ${
+                              className={`w-full min-w-0 text-left flex items-center justify-between gap-2 p-3 sm:p-3.5 rounded-xl border cursor-pointer select-none transition active:scale-[0.99] ${
                                 checked
                                   ? 'bg-espresso text-cream border-espresso shadow-sm'
                                   : 'bg-cream-card border-espresso/10 text-espresso hover:border-espresso/35'
                               }`}
                             >
-                              <div className="flex items-center gap-3 pr-3">
+                              <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
                                 {/* Custom Full-Tap Checkbox Indicator */}
                                 <div
                                   className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition ${
@@ -575,12 +575,12 @@ export default function App() {
                                     </svg>
                                   )}
                                 </div>
-                                <span className="text-sm font-medium leading-snug">
+                                <span className="text-xs sm:text-sm font-medium leading-snug break-words min-w-0">
                                   {item.name}
                                 </span>
                               </div>
                               <span
-                                className={`text-sm font-serif font-semibold shrink-0 ${
+                                className={`text-xs sm:text-sm font-serif font-semibold shrink-0 pl-1 ${
                                   checked ? 'text-cream' : 'text-espresso'
                                 }`}
                               >
