@@ -428,7 +428,7 @@ export default function App() {
                     min={todayStr}
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-4 py-3.5 rounded-2xl border border-espresso/25 bg-cream text-espresso font-medium focus:outline-none focus:border-espresso"
+                    className="block w-full max-w-[240px] sm:max-w-xs px-3.5 py-2.5 min-h-[46px] appearance-none rounded-xl border border-espresso/25 bg-cream text-espresso text-sm font-medium focus:outline-none focus:border-espresso"
                     required
                   />
                   {dateError && (

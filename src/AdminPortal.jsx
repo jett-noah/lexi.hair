@@ -194,7 +194,7 @@ export default function AdminPortal({ onBack }) {
                   type="date"
                   value={blockDate}
                   onChange={(e) => setBlockDate(e.target.value)}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-espresso/20 bg-cream text-sm"
+                  className="block w-full max-w-[240px] sm:max-w-full px-3.5 py-2.5 min-h-[44px] appearance-none rounded-xl border border-espresso/20 bg-cream text-sm"
                   required
                 />
               </div>
