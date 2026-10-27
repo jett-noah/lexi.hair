@@ -542,32 +542,51 @@ export default function App() {
                         {group.items.map((item) => {
                           const checked = selectedServiceIds.includes(item.id);
                           return (
-                            <label
+                            <button
+                              type="button"
                               key={item.id}
                               onClick={() => toggleService(item.id)}
-                              className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition ${
+                              className={`w-full text-left flex items-center justify-between p-3.5 rounded-xl border cursor-pointer select-none transition active:scale-[0.99] ${
                                 checked
-                                  ? 'bg-espresso text-cream border-espresso'
-                                  : 'bg-cream-card border-espresso/10 hover:border-espresso/35'
+                                  ? 'bg-espresso text-cream border-espresso shadow-sm'
+                                  : 'bg-cream-card border-espresso/10 text-espresso hover:border-espresso/35'
                               }`}
                             >
-                              <div className="flex items-center gap-3 pr-2">
-                                <input
-                                  type="checkbox"
-                                  checked={checked}
-                                  onChange={() => {}}
-                                  className="rounded border-espresso/30 text-terracotta focus:ring-0"
-                                />
-                                <span className="text-sm font-medium">{item.name}</span>
+                              <div className="flex items-center gap-3 pr-3">
+                                {/* Custom Full-Tap Checkbox Indicator */}
+                                <div
+                                  className={`w-5 h-5 rounded-md border flex items-center justify-center shrink-0 transition ${
+                                    checked
+                                      ? 'bg-terracotta border-terracotta text-espresso'
+                                      : 'border-espresso/30 bg-cream'
+                                  }`}
+                                >
+                                  {checked && (
+                                    <svg
+                                      viewBox="0 0 14 14"
+                                      fill="none"
+                                      className="w-3.5 h-3.5 stroke-current stroke-[2.5]"
+                                    >
+                                      <path
+                                        d="M2.5 7.5L5.5 10.5L11.5 3.5"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                      />
+                                    </svg>
+                                  )}
+                                </div>
+                                <span className="text-sm font-medium leading-snug">
+                                  {item.name}
+                                </span>
                               </div>
                               <span
                                 className={`text-sm font-serif font-semibold shrink-0 ${
                                   checked ? 'text-cream' : 'text-espresso'
                                 }`}
                               >
-                                {item.price.toFixed(2)}
+                                ${item.price.toFixed(2)}
                               </span>
-                            </label>
+                            </button>
                           );
                         })}
                       </div>
