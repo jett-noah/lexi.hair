@@ -1,29 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { SALON_INFO } from './constants';
-import { ExternalLink, Instagram } from 'lucide-react';
+import { ExternalLink } from 'lucide-react';
+
+// Clean inline SVG for the Instagram logo (never breaks across icon library versions)
+function InstagramIcon({ className = 'w-4 h-4' }) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className={className}
+    >
+      <rect width="20" height="20" x="2" y="2" rx="5" ry="5" />
+      <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+      <line x1="17.5" x2="17.51" y1="6.5" y2="6.5" />
+    </svg>
+  );
+}
 
 export default function InstagramFeed() {
   const [posts, setPosts] = useState([]);
-  const [loading, setLoading] = useState(true);
 
   // Optional JSON feed URL from Behold.so (e.g. https://feeds.behold.so/xxxxxx)
   const feedUrl = import.meta.env.VITE_INSTAGRAM_FEED_URL;
 
   useEffect(() => {
-    if (!feedUrl) {
-      setLoading(false);
-      return;
-    }
+    if (!feedUrl) return;
 
     fetch(feedUrl)
       .then((res) => res.json())
       .then((data) => {
-        // Behold returns either an array of posts or { posts: [...] }
         const rawPosts = Array.isArray(data) ? data : data.posts || [];
         setPosts(rawPosts.slice(0, 4));
       })
-      .catch((err) => console.error('Could not load Instagram feed:', err))
-      .finally(() => setLoading(false));
+      .catch((err) => console.error('Could not load Instagram feed:', err));
   }, [feedUrl]);
 
   return (
@@ -33,7 +46,7 @@ export default function InstagramFeed() {
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 mb-10">
           <div>
             <span className="text-xs uppercase tracking-widest text-terracotta font-semibold flex items-center gap-1.5">
-              <Instagram className="w-3.5 h-3.5" /> Latest on Instagram
+              <InstagramIcon className="w-3.5 h-3.5" /> Latest on Instagram
             </span>
             <h2 className="font-serif text-4xl font-semibold mt-1">
               Recent Work & Transformations
@@ -44,13 +57,13 @@ export default function InstagramFeed() {
           </div>
 
           <a
-            href={SALON_INFO.instagramUrl}
+            href={SALON_INFO.instagramUrl || 'https://www.instagram.com/hair.by.lexih_/'}
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full bg-espresso text-cream text-xs sm:text-sm font-medium hover:bg-espresso-light transition self-start sm:self-auto shrink-0"
           >
-            <Instagram className="w-4 h-4" />
-            Follow {SALON_INFO.instagramHandle}
+            <InstagramIcon className="w-4 h-4" />
+            Follow {SALON_INFO.instagramHandle || '@hair.by.lexih_'}
             <ExternalLink className="w-3.5 h-3.5" />
           </a>
         </div>
@@ -59,7 +72,6 @@ export default function InstagramFeed() {
         {feedUrl && posts.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {posts.map((post) => {
-              // Support Behold.so / Instagram Graph API fields seamlessly
               const imageUrl =
                 post.sizes?.medium?.mediaUrl ||
                 post.thumbnailUrl ||
@@ -95,23 +107,21 @@ export default function InstagramFeed() {
             })}
           </div>
         ) : (
-          /* Mode B: Automatic Live Instagram Profile Embed (works immediately with zero setup!) */
+          /* Mode B: Automatic Live Instagram Profile Embed */
           <div className="bg-cream-card border border-espresso/15 rounded-3xl p-4 sm:p-6 shadow-sm overflow-hidden">
             <iframe
               src="https://www.instagram.com/hair.by.lexih_/embed"
               title="Hair By Lexi Instagram Feed"
               className="w-full min-h-[480px] border-0 rounded-2xl bg-white"
-              scrolling="no"
-              allowTransparency="true"
             />
             <div className="text-center pt-4">
               <a
-                href={SALON_INFO.instagramUrl}
+                href={SALON_INFO.instagramUrl || 'https://www.instagram.com/hair.by.lexih_/'}
                 target="_blank"
                 rel="noreferrer"
                 className="text-xs font-medium text-espresso underline hover:text-terracotta inline-flex items-center gap-1"
               >
-                View full portfolio on Instagram ({SALON_INFO.instagramHandle}){' '}
+                View full portfolio on Instagram ({SALON_INFO.instagramHandle || '@hair.by.lexih_'})
                 <ExternalLink className="w-3 h-3" />
               </a>
             </div>
