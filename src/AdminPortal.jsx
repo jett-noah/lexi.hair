@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { supabase } from './supabaseClient';
 import {
   generateTimeSlots,
@@ -16,6 +16,7 @@ export default function AdminPortal({ onBack }) {
 
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [fetchError, setFetchError] = useState('');
 
   // Time-off blocking state
   const [blockDate, setBlockDate] = useState('');
@@ -24,7 +25,7 @@ export default function AdminPortal({ onBack }) {
   const [blockEnd, setBlockEnd] = useState('16:30');
   const [blockReason, setBlockReason] = useState('Time Off / Unavailable');
 
-  const allSlots = generateTimeSlots();
+  const allSlots = generateTimeSlots() || [];
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -40,18 +41,26 @@ export default function AdminPortal({ onBack }) {
 
   const fetchAppointments = async () => {
     setLoading(true);
-    const today = new Date().toISOString().split('T')[0];
-    const { data, error } = await supabase
-      .from('appointments')
-      .select('*')
-      .gte('appointment_date', today)
-      .order('appointment_date', { ascending: true })
-      .order('start_time', { ascending: true });
+    setFetchError('');
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const { data, error } = await supabase
+        .from('appointments')
+        .select('*')
+        .gte('appointment_date', today)
+        .order('appointment_date', { ascending: true })
+        .order('start_time', { ascending: true });
 
-    if (!error && data) {
-      setAppointments(data);
+      if (error) {
+        setFetchError(error.message);
+      } else {
+        setAppointments(Array.isArray(data) ? data : []);
+      }
+    } catch (err) {
+      setFetchError(err.message || 'Failed to load appointments.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleCreateBlock = async (e) => {
@@ -100,6 +109,7 @@ export default function AdminPortal({ onBack }) {
       <div className="min-h-screen flex items-center justify-center px-4">
         <div className="bg-cream-card border border-espresso/15 rounded-2xl p-8 max-w-md w-full shadow-sm">
           <button
+            type="button"
             onClick={onBack}
             className="inline-flex items-center gap-1.5 text-sm text-espresso-muted hover:text-espresso mb-6"
           >
@@ -141,6 +151,7 @@ export default function AdminPortal({ onBack }) {
       <div className="flex flex-wrap items-center justify-between gap-4 mb-8 pb-4 border-b border-espresso/15">
         <div>
           <button
+            type="button"
             onClick={onBack}
             className="inline-flex items-center gap-1.5 text-sm text-espresso-muted hover:text-espresso mb-2"
           >
@@ -149,12 +160,19 @@ export default function AdminPortal({ onBack }) {
           <h1 className="font-serif text-4xl font-semibold">Schedule & Time-Off Manager</h1>
         </div>
         <button
+          type="button"
           onClick={fetchAppointments}
           className="px-4 py-2 rounded-xl border border-espresso/20 text-sm hover:bg-cream-dark transition"
         >
           Refresh Schedule
         </button>
       </div>
+
+      {fetchError && (
+        <div className="mb-6 p-4 rounded-xl bg-red-50 border border-red-200 text-red-700 text-sm">
+          Error loading schedule: {fetchError}
+        </div>
+      )}
 
       <div className="grid md:grid-cols-3 gap-8">
         {/* Left Column: Block Time Off Form */}
@@ -263,70 +281,79 @@ export default function AdminPortal({ onBack }) {
               No upcoming appointments or time blocks scheduled.
             </div>
           ) : (
-            appointments.map((appt) => (
-              <div
-                key={appt.id}
-                className={`rounded-2xl p-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
-                  appt.is_blocked
-                    ? 'bg-cream-dark/70 border-espresso/20'
-                    : 'bg-cream-card border-espresso/15 shadow-sm'
-                }`}
-              >
-                <div className="space-y-1">
-                  <div className="flex items-center gap-2.5">
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-espresso text-cream">
-                      {appt.appointment_date}
-                    </span>
-                    <span className="text-sm font-semibold flex items-center gap-1">
-                      <Clock className="w-3.5 h-3.5 text-terracotta" />
-                      {formatTime12Hr(appt.start_time)} – {formatTime12Hr(appt.end_time)}
-                    </span>
-                    {appt.is_blocked && (
-                      <span className="text-xs uppercase tracking-wider px-2 py-0.5 rounded bg-terracotta/25 text-espresso font-semibold">
-                        Blocked Off
+            appointments.map((appt) => {
+              const serviceList = Array.isArray(appt.services) ? appt.services : [];
+
+              return (
+                <div
+                  key={appt.id}
+                  className={`rounded-2xl p-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                    appt.is_blocked
+                      ? 'bg-cream-dark/70 border-espresso/20'
+                      : 'bg-cream-card border-espresso/15 shadow-sm'
+                  }`}
+                >
+                  <div className="space-y-1">
+                    <div className="flex items-center gap-2.5">
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-espresso text-cream">
+                        {appt.appointment_date}
                       </span>
+                      <span className="text-sm font-semibold flex items-center gap-1">
+                        <Clock className="w-3.5 h-3.5 text-terracotta" />
+                        {appt.start_time ? formatTime12Hr(appt.start_time) : ''} –{' '}
+                        {appt.end_time ? formatTime12Hr(appt.end_time) : ''}
+                      </span>
+                      {appt.is_blocked && (
+                        <span className="text-xs uppercase tracking-wider px-2 py-0.5 rounded bg-terracotta/25 text-espresso font-semibold">
+                          Blocked Off
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="font-serif text-xl font-semibold">{appt.client_name}</h3>
+
+                    {!appt.is_blocked && (
+                      <>
+                        <p className="text-xs text-espresso-light">
+                          {appt.client_email} {appt.client_phone ? `• ${appt.client_phone}` : ''}
+                        </p>
+                        <p className="text-xs text-espresso font-medium pt-1">
+                          Services:{' '}
+                          {serviceList.map((s) => `${s.name} ($${s.price})`).join(', ')} —{' '}
+                          <span className="font-semibold">
+                            Est. ${Number(appt.total_price || 0).toFixed(2)}
+                          </span>
+                        </p>
+                        {appt.notes && (
+                          <p className="text-xs italic text-espresso-light bg-cream p-2 rounded-lg mt-1">
+                            Notes: "{appt.notes}"
+                          </p>
+                        )}
+                      </>
                     )}
                   </div>
 
-                  <h3 className="font-serif text-xl font-semibold">{appt.client_name}</h3>
-
-                  {!appt.is_blocked && (
-                    <>
-                      <p className="text-xs text-espresso-light">
-                        {appt.client_email} {appt.client_phone ? `• ${appt.client_phone}` : ''}
-                      </p>
-                      <p className="text-xs text-espresso font-medium pt-1">
-                        Services:{' '}
-                        {(appt.services || []).map((s) => `${s.name} ($${s.price})`).join(', ')} —{' '}
-                        <span className="font-semibold">Est. ${appt.total_price}</span>
-                      </p>
-                      {appt.notes && (
-                        <p className="text-xs italic text-espresso-light bg-cream p-2 rounded-lg mt-1">
-                          Notes: "{appt.notes}"
-                        </p>
-                      )}
-                    </>
-                  )}
-                </div>
-
-                <div className="flex sm:flex-col items-end gap-2 shrink-0">
-                  {!appt.is_blocked && (
+                  <div className="flex sm:flex-col items-end gap-2 shrink-0">
+                    {!appt.is_blocked && (
+                      <button
+                        type="button"
+                        onClick={() => downloadIcsFile(appt)}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-espresso/20 text-xs font-medium hover:bg-cream-dark transition"
+                      >
+                        <Calendar className="w-3.5 h-3.5" /> Apple Calendar (.ics)
+                      </button>
+                    )}
                     <button
-                      onClick={() => downloadIcsFile(appt)}
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-espresso/20 text-xs font-medium hover:bg-cream-dark transition"
+                      type="button"
+                      onClick={() => handleDelete(appt.id, appt.client_name)}
+                      className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-red-700 hover:bg-red-50 transition"
                     >
-                      <Apple className="w-3.5 h-3.5" /> Apple Calendar
+                      <Trash2 className="w-3.5 h-3.5" /> Cancel / Remove
                     </button>
-                  )}
-                  <button
-                    onClick={() => handleDelete(appt.id, appt.client_name)}
-                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs text-red-700 hover:bg-red-50 transition"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" /> Cancel / Remove
-                  </button>
+                  </div>
                 </div>
-              </div>
-            ))
+              );
+            })
           )}
         </div>
       </div>
